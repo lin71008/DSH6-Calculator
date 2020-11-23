@@ -124,13 +124,13 @@ generate_tree (
 	@destination: a pointer to a pointer to structure node,
 				  a pointer to expression tree,
 				  DEFALUT VALUE MUST BE EMPTY (NULL)
-	@source: a pointer to a pointer to structure node,
-			 a pointer to expression token list
+	@source: a pointer to structure node,
+			 expression token list
 ) no return
 **************************************************************/
 extern void generate_tree (
 	node** destination,
-	node** source
+	node* source
 );
 
 /**************************************************************

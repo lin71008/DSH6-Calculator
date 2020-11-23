@@ -24,12 +24,16 @@ char* opttta(const optt opt)
 	else if (opt == RPAR_OPT) return ")";
 	else return "?";
 }
-
-int opttcmp(const optt opt_1, const optt opt_2)
+int priority(optt opt)
 {
-	return !!((int) opt_1 >= (int) opt_2);
+	if (opt == ADD_OPT) return 1;
+	else if (opt == SUB_OPT) return 1;
+	else if (opt == MUL_OPT) return 2;
+	else if (opt == DIV_OPT) return 2;
+	else if (opt == LPAR_OPT) return 3;
+	else if (opt == RPAR_OPT) return 3;
+	else return 0;
 }
-
 node* new_node()
 {
 	node* ret = (node*) malloc(sizeof(node));
@@ -37,13 +41,6 @@ node* new_node()
 	ret->left = NULL;
 	ret->right = NULL;
 	return ret;
-}
-
-node* rightest_node(node* source)
-{
-	if (source == NULL) return source;
-	else if (source->right == NULL) return source;
-	else return rightest_node(source->right);
 }
 
 void set_opt(node* dest, const char* sym)
@@ -85,16 +82,17 @@ void generate_token(node** dest, const char* source)
 		{
 			strncpy(temp, source+head, clen);
 			temp[clen]='\0';
-			set_val(ntok, temp);
+			ntok->val = atoi(temp);
+			ntok->type = VAL_SYM;
 			continue;
 		}
 		// function name node
-		clen = strspn(source+head, "abcdefghijklmnopqrstuvwxyz_0123456790");
+		clen = strspn(source+head, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_012345679");
 		if (clen != 0)
 		{
 			strncpy(temp, source+head, clen);
 			temp[clen]='\0';
-			set_opt(ntok, temp);
+			// TODO: FUNCTION
 			continue;
 		}
 		// else... operator node
@@ -107,15 +105,30 @@ void generate_token(node** dest, const char* source)
 
 void view_token(node* source)
 {
-	node* curr_tok = source;
-	while (curr_tok != NULL)
+	for (node* head = source; head != NULL; head = head->next)
 	{
-		if (curr_tok->type == VAL_SYM) printf("%d, ", curr_tok->val);
-		else if (curr_tok->type == OPT_SYM) printf("%s, ", opttta(curr_tok->opt));
-		else printf("?, ");
-		curr_tok = curr_tok->right;
+		if (head->type == VAL_SYM)
+		{
+			printf("%d", head->val);
+		}
+		else if (head->type == OPT_SYM)
+		{
+			printf("%s", opttta(head->opt));
+		}
+		else
+		{
+			printf("?");
+		}
+
+		if (head->next != NULL)
+		{
+			printf(", ");
+		}
+		else
+		{
+			printf("\n");
+		}
 	}
-	printf("\n");
 }
 
 void delete_token(node** dest)
@@ -124,8 +137,8 @@ void delete_token(node** dest)
 	{
 		delete_token(&(*dest)->right);
 		free((*dest));
+		(*dest) = NULL;
 	}
-	(*dest) = NULL;
 }
 
 void raise_error(const char* err_msg)
@@ -184,7 +197,7 @@ void syntax_check(node* source)
 							{
 								raise_error("EMPTY");
 							}
-							else
+							else if (prev_tok->opt != RPAR_OPT)
 							{
 								raise_error("LOPT_R");
 							}
@@ -254,10 +267,11 @@ int simplest_calculate(const optt opt, const int val_1, const int val_2)
 	}
 	else
 	{
-		raise_error("Undefine operator method.");
+		raise_error("Undefined operator method.");
 		return 0;
 	}
 }
+
 
 int calculate(node* source)
 {
@@ -284,83 +298,109 @@ int calculate(node* source)
 	}
 }
 
-void delete_tree(node** dest)
+node** rightest_node(node** source)
 {
-	if ((*dest) != NULL)
-	{
-		if ((*dest)->left != NULL)
-		{
-			delete_tree(&(*dest)->left);
-		}
-		if ((*dest)->right != NULL)
-		{
-			delete_tree(&(*dest)->right);
-		}
-		free((*dest));
-	}
-	(*dest) = NULL;
+	if (source == NULL) return source;
+	else if ((*source) == NULL) return source;
+	else if ((*source)->right == NULL) return source;
+	else return rightest_node(&(*source)->right);
 }
 
-void generate_tree(node** dest, node** source)
+void generate_tree(node** dest, node* source)
 {
 	size_t top = 0;
-	node* stack[100];
-
-	node *curr_head = (*source), *next_head = NULL;
-	while (curr_head != NULL)
+	node** stack[64];
+	stack[0] = dest;
+	for (node *head = source, *next_head = NULL; head != NULL; head = next_head)
 	{
-		if (curr_head != NULL) next_head = curr_head->right;
-		if (curr_head->type == VAL_SYM)
+		next_head = head->next;
+
+		head->left = NULL;
+		head->right = NULL;
+		if (head->type == VAL_SYM)
 		{
-			curr_head->left = NULL;
-			curr_head->right = NULL;
 			if ((*dest) == NULL)
 			{
-				curr_head->left = NULL;
-				curr_head->right = NULL;
-				(*dest) = curr_head;
+				(*dest) = head;
 			}
 			else
 			{
-				rightest_node((*dest))->right = curr_head;
+				(*(rightest_node(dest)))->right = head;
 			}
 		}
-		if (curr_head->type == OPT_SYM)
+		else if (head->type == OPT_SYM)
 		{
-			if (curr_head->opt == LPAR_OPT)
+			if (head->opt == LPAR_OPT)
 			{
-				stack[top+1] = stack[top]->right;
+				stack[top+1] = rightest_node(stack[top]);
 				top++;
 			}
-			else if (curr_head->opt == RPAR_OPT)
+			else if (head->opt == RPAR_OPT)
 			{
 				top--;
 			}
 			else
 			{
-				if ((*dest)->type == OPT_SYM)
+				if ((*dest)->type == VAL_SYM)
 				{
-					if ((*dest)->opt < curr_head->opt)
+					head->left = (*dest);
+					(*dest) = head;
+				}
+				else if ((*dest)->type == OPT_SYM)
+				{
+					if (priority((*dest)->type) < priority(head->opt))
 					{
-						curr_head->left = (*dest);
-						curr_head->right = NULL;
-						(*dest) = curr_head;
+						head->left = (*dest)->right;
+						(*dest)->right = head;
 					}
 					else
 					{
-						curr_head->left = (*dest);
-						curr_head->right = NULL;
-						(*dest) = curr_head;
+						head->left = (*dest);
+						(*dest) = head;
 					}
 				}
 				else
 				{
-					curr_head->left = (*dest);
-					curr_head->right = NULL;
-					(*dest) = curr_head;
+					raise_error("Expression contain unknown symbol.");
+					return;
 				}
 			}
 		}
-		curr_head = next_head;
+		else
+		{
+			raise_error("Expression contain unknown symbol.");
+			return;
+		}
 	}
 }
+
+void delete_tree(node** dest)
+{
+	if ((*dest) != NULL)
+	{
+		delete_tree(&(*dest)->left);
+		delete_tree(&(*dest)->right);
+		free((*dest));
+		(*dest) = NULL;
+	}
+}
+
+void view_tree_postfix(node* source)
+{
+	if (source == NULL) return;
+	view_tree_postfix(source->left);
+	view_tree_postfix(source->right);
+	if (source->type == VAL_SYM)
+	{
+		printf("%d", source->val);
+	}
+	else if (source->type == OPT_SYM)
+	{
+		printf("%s", opttta(source->opt));
+	}
+	else
+	{
+		printf("?");
+	}
+}
+
