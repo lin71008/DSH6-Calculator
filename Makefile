@@ -1,11 +1,12 @@
 CC = gcc
 FLAGS = -g -std=gnu99 -O0
 
-WFLAGS = -o debug -Wall -Werror
+WFLAGS = #-Wall -Werror
 
-FILENAME = main.c
 
-make:
-	rm debug.exe
-	${CC} ${FILENAME} ${FLAGS} $(WFLAGS)
-	./debug
+build:
+	${CC} -c main.c -o main.o ${FLAGS} $(WFLAGS)
+	${CC} -c functional.c -o functional.o ${FLAGS} $(WFLAGS)
+	${CC} functional.o main.o -o debug.exe ${FLAGS} $(WFLAGS)
+test:
+	time ./debug.exe < sample_input

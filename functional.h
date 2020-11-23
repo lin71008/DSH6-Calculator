@@ -5,93 +5,155 @@
 #include <string.h>
 
 /**************************************************************
-int create_split(
-	@destination: a list of string,
-				  each of element either operator or numerical.
-				  DEFAULT VALUE MUST BE NULL.
-	@source: string,
-		     the expression need to be split.
-	@max: unsigned integer,
-		  the default length of the list of string.
-)	@length: unsigned integer,
-			 return the length of @destination.
+enum operator_type:
+	UNKNOWN_OPT: ?
+	ADD_OPT: +
+	SUB_OPT: -
+	MUL_OPT: *
+	DIV_OPT: /
+	LPAR_OPT: (
+	RPAR_OPT: )
 **************************************************************/
-size_t create_split(char*** destination,
-					const char* source,
-					const size_t max);
+typedef enum operator_type
+{
+	UNKNOWN_OPT,
+	ADD_OPT,
+	SUB_OPT,
+	MUL_OPT,
+	DIV_OPT,
+	LPAR_OPT,
+	RPAR_OPT
+} optt;
 
 /**************************************************************
-void view_split(
-	@destination: a list of string,
-				  each of element either operator or numerical.
-				  DEFAULT VALUE MUST BE NULL.
- 	@length: unsigned integer,
-			 the length of @destination.
-)	no return
+enum symbol_type:
+	UNKNOWN_SYM: unknown
+	OPT_SYM: operator
+	VAL_SYM: operand
 **************************************************************/
-
-void view_split(char** source,
-				const size_t length);
-
-/**************************************************************
-void delete_split(char***, const size_t)
-	@source: a list of string,
-				  each of element either operator or numerical.
-				  DEFAULT VALUE MUST BE NULL.
-	@length: unsigned integer,
-		  the length of the list of string.
-)	no return
-**************************************************************/
-void delete_split(char*** destination,
-				  const size_t length);
+typedef enum symbol_type
+{
+	UNKNOWN_SYM,
+	OPT_SYM,
+	VAL_SYM
+} symt;
 
 /**************************************************************
 struct node:
 	@type: enum symbol_type,
 		   labeled node type is either operator, numerical or
 		   unknown.
+		   DEFAULT VALUE: UNKNOWN (UNKNOWN_SYM)
 	union:
-		   @opt: enum opt_type
-		   @val: integer
+		   @opt: enum operator_type
+		   @val: 32-bit integer
 	next:
-		  @left
-		  @right
+		  @left (previous): a pointer to structure node,
+		  					DEFAULT VALUE: EMPTY (NULL)
+		  @right (next): a pointer to structure node,
+		  				 DEFAULT VALUE: EMPTY (NULL)
 **************************************************************/
-typedef struct node node;
-typedef enum symbol_type symt;
-typedef enum operator_type optt;
+typedef struct node
+{
+	symt type;
+	union
+	{
+		optt opt;
+		int val;
+	};
+	union
+	{
+		struct node *left;
+		struct node *prev;
+	};
+	union
+	{
+		struct node *right;
+		struct node *next;
+	};
+} node;
+
+int error_counter;
 
 /**************************************************************
-virtual stack: node
-	@type: enum symbol_type,
-		   labeled node type is either operator, numerical or
-		   unknown.
-	union:
-		   @opt: enum opt_type
-		   @val: integer
-	@next
+generate_token (
+	@destination: a pointer to a pointer to structure node,
+				  a pointer to expression token list,
+				  DEFAULT VALUE MUST BE EMPTY (NULL)
+	@source: string (a pointer to a character list),
+			 expression in string waiting to analyze
+) no return
 **************************************************************/
-typedef node stack;
-
+extern void generate_token (
+	node** destination,
+	const char* source
+);
 
 /**************************************************************
-node* new_node(
-	@symbol: string,
-			 DEFAULT VALUE IS UNKNOWN_SYM
-)	@new: point to node,
-		  return a new node.
+delete_token (
+	@destination: a pointer to a pointer to structure node,
+				  a pointer to expression token list
+) no return, let @destination be EMPTY (NULL)
 **************************************************************/
+extern void delete_token (
+	node** destination
+);
 
 /**************************************************************
-void delete_node(
-	@destination: point to node,
-				  MAYBE EMPTY
-)
+view_token (
+	@source: a pointer to structure node,
+			 expression token list
+) no return, print @source data in one line.
 **************************************************************/
+extern void view_token (
+	node* source
+);
 
+/**************************************************************
+syntax_check (
+	@source: a pointer to structure node,
+			 expression token list
+) no return
+**************************************************************/
+extern void syntax_check (
+	node* source
+);
+
+/**************************************************************
+generate_tree (
+	@destination: a pointer to a pointer to structure node,
+				  a pointer to expression tree,
+				  DEFALUT VALUE MUST BE EMPTY (NULL)
+	@source: a pointer to a pointer to structure node,
+			 a pointer to expression token list
+) no return
+**************************************************************/
+extern void generate_tree (
+	node** destination,
+	node** source
+);
+
+/**************************************************************
+delete_tree (
+	@destination: a pointer to a pointer to structure node,
+				  a pointer to expression tree
+) no return, let @destination be EMPTY (NULL)
+**************************************************************/
+extern void delete_tree (
+	node** destination
+);
+
+/**************************************************************
+view_tree_postfix (
+	@source: a pointer to structure node,
+			 expression tree
+) no return, print @source structure in postfix
+**************************************************************/
+extern void view_tree_postfix (
+	node* source
+);
+
+extern int calculate(node* source);
 /**************************************************************
 **************************************************************/
 #endif
-
-
-// {type, *void}

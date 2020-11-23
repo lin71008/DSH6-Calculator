@@ -2,24 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "functional.c"
+#include "functional.h"
 
-int main(void)
+int main(int argc, char const *argv[])
 {
-	char str[] = "1+2*3(-4)";
-	// scanf("%s", str);
-
-	int top = 0;
-	node* token;
-	top = create_token(&token, str, 100);
-	view_token(token, top);
-	delete_token(&token, top);
-
-	// int top = 0;
-	// char** stack;
-	// top = create_split(&stack, str, 100);
-	// view_split(stack, top);
-	// delete_split(&stack, top);
-
-    return 0;
+	char exp_str[128];
+	node* exp_token = NULL;
+	node* exp_tree = NULL;
+	int result = 0;
+	while(scanf("%s", exp_str) != EOF)
+	{
+		generate_token(&exp_token, exp_str);
+		view_token(exp_token);
+		syntax_check(exp_token);
+		if (error_counter != 0)
+		{
+			delete_token(&exp_token);
+			continue;
+		}
+		// generate_tree(&exp_tree, &exp_token);
+		// view_tree_postfix(exp_tree);
+		// result = calculate(exp_tree);
+		// if (error_counter == 0)
+		// {
+		// 	printf("=%d\n", result);
+		// }
+		// delete_tree(&exp_tree);
+		// break;
+	}
+	return 0;
 }

@@ -1,91 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "functional.h"
 
-size_t create_split(char*** dest, const char* source, const size_t max)
-{
-	size_t len = 0;
-	(*dest) = (char**) malloc(max*sizeof(char*));
-	for (size_t clen, head = 0; head < strlen(source); head += clen)
-	{
-		// numerical digit
-		clen = strspn(source+head, "0123456798");
-		if (clen != 0)
-		{
-			(*dest)[len] = (char*) malloc((clen+1)*sizeof(char));
-			strncpy((*dest)[len], source+head, clen);
-			(*dest)[len][clen] = '\0';
-			len++;
-			continue;
-		}
-		// function name
-		clen = strspn(source+head, "abcdefghijklmnopwxyz_0123456790");
-		if (clen != 0)
-		{
-			(*dest)[len] = (char*) malloc((clen+1)*sizeof(char));
-			strncpy((*dest)[len], source+head, clen);
-			(*dest)[len][clen] = '\0';
-			len++;
-			continue;
-		}
-		// else... operator
-		clen = 1;
-		(*dest)[len] = (char*) malloc((clen+1)*sizeof(char));
-		strncpy((*dest)[len], source+head, clen);
-		(*dest)[len][clen] = '\0';
-		len++;
-	}
-	return len;
-}
-
-void view_split(char** source, const size_t len)
-{
-	for (size_t i = 0; i < len; ++i)
-	{
-		printf("%s%c", source[i], ",\n"[i==len-1]);
-	}
-}
-
-void delete_split(char*** dest, const size_t len)
-{
-	for (size_t i = 0; i < len; ++i)
-	{
-		free((*dest)[i]);
-	}
-	free((*dest));
-	(*dest) = NULL;
-}
-
-enum operator_type
-{
-	UNKNOWN_OPT,
-	ADD_OPT,
-	SUB_OPT,
-	MUL_OPT,
-	DIV_OPT,
-	LPAR_OPT,
-	RPAR_OPT
-};
-
-enum symbol_type
-{
-	UNKNOWN_SYM,
-	OPT_SYM,
-	VAL_SYM
-};
-
-struct node
-{
-	symt type;
-	union
-	{
-		optt opt;
-		int val;
-	};
-	node *left, *right;
-};
-
-optt atoptt(const char* opt)
+static optt atoptt(const char* opt)
 {
 	if (!strcmp(opt, "+")) return ADD_OPT;
 	else if (!strcmp(opt, "-")) return SUB_OPT;
@@ -96,7 +15,7 @@ optt atoptt(const char* opt)
 	else return UNKNOWN_OPT;
 }
 
-char* opttta(const optt opt)
+static char* opttta(const optt opt)
 {
 	if (opt == ADD_OPT) return "+";
 	else if (opt == SUB_OPT) return "-";
@@ -107,23 +26,22 @@ char* opttta(const optt opt)
 	else return "?";
 }
 
-node* new_node()
+static node* new_node()
 {
-	node* ret = (node*) malloc(sizeof(node));
-	ret->type = UNKNOWN_SYM;
-	ret->left = NULL;
-	ret->right = NULL;
-	return ret;
+	node* n = (node*) malloc(sizeof(node));
+	n->type = UNKNOWN_SYM;
+	n->left = NULL;
+	n->right = NULL;
+	return n;
 }
 
-void init_node(node* dest)
+static void set_val(node* dest, const char* sym)
 {
-	dest->type = UNKNOWN_SYM;
-	dest->left = NULL;
-	dest->right = NULL;
+	dest->val = atoi(sym);
+	dest->type = VAL_SYM;
 }
 
-void set_opt(node* dest, const char* sym)
+static void set_opt(node* dest, const char* sym)
 {
 	dest->opt = atoptt(sym);
 	if (dest->opt != UNKNOWN_OPT)
@@ -132,75 +50,359 @@ void set_opt(node* dest, const char* sym)
 	}
 }
 
-void set_val(node* dest, const char* sym)
+static node* rightest_node(node* source)
 {
-	dest->val = atoi(sym);
-	dest->type = VAL_SYM;
+	if (source == NULL) return source;
+	else if (source->right == NULL) return source;
+	else return rightest_node(source->right);
 }
 
-
-size_t create_token(node** dest, const char* source, const size_t max)
+void generate_token(node** dest, const char* source)
 {
-	size_t len = 0;
-	char temp[128];  // buffer
-	(*dest) = (node*) malloc(max*sizeof(node));
-	for (size_t clen, head = 0; head < strlen(source); head += clen)
+	char atok[128];  // buffer
+	node* ntok = NULL;  // new token node
+	for (size_t tlen, head = 0; head < strlen(source); head += tlen)
 	{
-		// numerical digit
-		clen = strspn(source+head, "0123456798");
-		if (clen != 0)
+		// create new token node
+		if ((*dest) == NULL)
 		{
-			init_node(&(*dest)[len]);
-			strncpy(temp, source+head, clen);
-			temp[clen]='\0';
-			set_val(&(*dest)[len], temp);
-			len++;
-			continue;
-		}
-		// function name
-		clen = strspn(source+head, "abcdefghijklmnopwxyz_0123456790");
-		if (clen != 0)
-		{
-			init_node(&(*dest)[len]);
-			strncpy(temp, source+head, clen);
-			temp[clen]='\0';
-			set_opt(&(*dest)[len], temp);
-			len++;
-			continue;
-		}
-		// else... operator
-		clen = 1;
-		init_node(&(*dest)[len]);
-		strncpy(temp, source+head, clen);
-		temp[clen]='\0';
-		set_opt(&(*dest)[len], temp);
-		len++;
-	}
-	return len;
-}
-
-void view_token(const node* source, const size_t len)
-{
-	for (size_t i = 0; i < len; ++i)
-	{
-		if (source[i].type == VAL_SYM)
-		{
-			printf("%d,", source[i].val);
-		}
-		else if (source[i].type == OPT_SYM)
-		{
-			printf("%s,", opttta(source[i].opt));
+			(*dest) = new_node();
+			ntok = (*dest);
 		}
 		else
 		{
-			printf("???,");
+			ntok->next = new_node();
+			ntok->next->prev = ntok;
+			ntok = ntok->next;
+		}
+
+		// operand := span(0-9)
+		tlen = strspn(source+head, "0123456789");
+		if (tlen != 0)
+		{
+			strncpy(atok, source+head, tlen);
+			atok[tlen]='\0';
+			ntok
+			continue;
+		}
+		// function name := span(a-zA-Z_0-9)
+		tlen = strspn(source+head, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_012345679");
+		if (tlen != 0)
+		{
+			strncpy(atok, source+head, tlen);
+			atok[tlen]='\0';
+			set_opt(ntok, atok);
+			continue;
+		}
+		// operator := <char>
+		tlen = 1;
+		strncpy(atok, source+head, tlen);
+		atok[tlen]='\0';
+		set_opt(ntok, atok);
+	}
+}
+
+void view_token(node* source)
+{
+	for(node *curr_tok = source; curr_tok != NULL; curr_tok = curr_tok->next)
+	{
+		if (curr_tok->type == VAL_SYM)
+		{
+			printf("%d, ", curr_tok->val);
+		}
+		else if (curr_tok->type == OPT_SYM)
+		{
+			printf("%s, ", opttta(curr_tok->opt));
+		}
+		else
+		{
+			printf("?, ");
 		}
 	}
 	printf("\n");
 }
 
-void delete_token(node** dest, const size_t len)
+void delete_token(node** dest)
 {
-	free((*dest));
+	if ((*dest) != NULL)
+	{
+		delete_token(&(*dest)->right);
+		free((*dest));
+	}
 	(*dest) = NULL;
+}
+
+void raise_error(const char* err_msg)
+{
+	printf("%s\n", err_msg);
+	error_counter++;
+}
+
+void syntax_check(node* source)
+{
+	// reset error flags
+	error_counter = 0;
+
+	size_t pa_level = 0;
+	node* prev_tok = NULL;
+	node* curr_tok = source;
+	// FOPT check
+	if (curr_tok->type == OPT_SYM && curr_tok->opt != LPAR_OPT)
+	{
+		raise_error("FOPT");
+	}
+	// UMPA check
+	while(curr_tok != NULL)
+	{
+		if (curr_tok->type == UNKNOWN_SYM)
+		{
+			raise_error("UN");
+		}
+		else if (curr_tok->type == OPT_SYM)
+		{
+			if (curr_tok->opt == LPAR_OPT)
+			{
+				pa_level++;
+				if (prev_tok != NULL)
+				{
+					if (prev_tok->type == VAL_SYM)
+					{
+						raise_error("MISMUL_L");
+					}
+					else if (prev_tok->type == OPT_SYM && prev_tok->opt == RPAR_OPT)
+					{
+						raise_error("MSIMUL");
+					}
+				}
+			}
+			else if (curr_tok->opt == RPAR_OPT)
+			{
+				if (pa_level > 0)
+				{
+					pa_level--;
+					if (prev_tok != NULL)
+					{
+						if (prev_tok->type == OPT_SYM)
+						{
+							if (prev_tok->opt == LPAR_OPT)
+							{
+								raise_error("EMPTY");
+							}
+							else
+							{
+								raise_error("LOPT_R");
+							}
+						}
+					}
+				}
+				else
+				{
+					raise_error("UMPA_R");
+				}
+			}
+			else if (prev_tok != NULL && prev_tok->type == OPT_SYM)
+			{
+				if (prev_tok->opt == LPAR_OPT)
+				{
+					raise_error("FOPT_L");
+				}
+				else if (prev_tok->opt != RPAR_OPT)
+				{
+					raise_error("OPTOPT");
+				}
+			}
+		}
+		else if (prev_tok != NULL && prev_tok->type == OPT_SYM && prev_tok->opt == RPAR_OPT)
+		{
+			raise_error("MISMUL_R");
+		}
+		// update
+		prev_tok = curr_tok;
+		curr_tok = curr_tok->right;
+	}
+	if (pa_level != 0)
+	{
+		raise_error("UMPA_L");
+	}
+	if (prev_tok->type == OPT_SYM && prev_tok->opt != RPAR_OPT)
+	{
+		raise_error("LOPT");
+	}
+}
+
+int simplest_calculate(const optt opt, const int val_1, const int val_2)
+{
+	if (opt == ADD_OPT)
+	{
+		return val_1 + val_2;
+	}
+	else if (opt == SUB_OPT)
+	{
+		return val_1 - val_2;
+	}
+	else if (opt == MUL_OPT)
+	{
+		return val_1 * val_2;
+	}
+	else if (opt == DIV_OPT)
+	{
+		if (val_2 == 0)
+		{
+			raise_error("Divide By Zero.");
+			return 0;
+		}
+		else
+		{
+			return val_1 / val_2;
+		}
+	}
+	else
+	{
+		raise_error("Undefine operator method.");
+		return 0;
+	}
+}
+
+int calculate(node* source)
+{
+	if (source == NULL)
+	{
+		raise_error("Empty expression node.");
+		return 0;
+	}
+	else
+	{
+		if (source->type == VAL_SYM)
+		{
+			return source->val;
+		}
+		else if (source->type == OPT_SYM)
+		{
+			return simplest_calculate(source->opt, calculate(source->left), calculate(source->right));
+		}
+		else
+		{
+			raise_error("Expression contain unknown symbol.");
+			return 0;
+		}
+	}
+}
+
+void delete_tree(node** dest)
+{
+	if ((*dest) != NULL)
+	{
+		if ((*dest)->left != NULL)
+		{
+			delete_tree(&(*dest)->left);
+		}
+		if ((*dest)->right != NULL)
+		{
+			delete_tree(&(*dest)->right);
+		}
+		free((*dest));
+	}
+	(*dest) = NULL;
+}
+
+void generate_tree(node** dest, node** source)
+{
+	size_t top = 0;
+	node* stack[100];
+
+	node *curr_head = (*source), *next_head = NULL;
+	while (curr_head != NULL)
+	{
+		next_head = curr_head->right;
+		if (curr_head->type == VAL_SYM)
+		{
+			curr_head->left = NULL;
+			curr_head->right = NULL;
+			if ((*dest) == NULL)
+			{
+				curr_head->left = NULL;
+				curr_head->right = NULL;
+				(*dest) = curr_head;
+			}
+			else
+			{
+				rightest_node((*dest))->right = curr_head;
+			}
+		}
+		if (curr_head->type == OPT_SYM)
+		{
+			if (curr_head->opt == LPAR_OPT)
+			{
+				stack[top+1] = stack[top]->right;
+				top++;
+			}
+			else if (curr_head->opt == RPAR_OPT)
+			{
+				top--;
+			}
+			else
+			{
+				if ((*dest)->type == OPT_SYM)
+				{
+					if ((*dest)->opt < curr_head->opt)
+					{
+						curr_head->left = (*dest);
+						curr_head->right = NULL;
+						(*dest) = curr_head;
+					}
+					else
+					{
+						curr_head->left = (*dest);
+						curr_head->right = NULL;
+						(*dest) = curr_head;
+					}
+				}
+				else
+				{
+					curr_head->left = (*dest);
+					curr_head->right = NULL;
+					(*dest) = curr_head;
+				}
+			}
+		}
+		curr_head = next_head;
+	}
+}
+
+static void private_view_tree_postfix(node* source)
+{
+	if (source->left != NULL)
+	{
+		private_view_tree_postfix(source->left);
+	}
+	if (source->right != NULL)
+	{
+		private_view_tree_postfix(source->right);
+	}
+	// current
+	if (source->type == VAL_SYM)
+	{
+		printf("%d", source->val);
+	}
+	else if (source->type == OPT_SYM)
+	{
+		printf("%s", opttta(source->opt));
+	}
+	else
+	{
+		// UNKNOWN_SYM
+	}
+}
+
+void view_tree_postfix (node* source)
+{
+	if (source == NULL)
+	{
+		printf("Empty expression node.\n");
+	}
+	else
+	{
+		private_view_tree_postfix(source);
+		printf("\n");
+	}
 }
