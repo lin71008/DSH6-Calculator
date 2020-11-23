@@ -308,7 +308,7 @@ node** rightest_node(node** source)
 
 void generate_tree(node** dest, node* source)
 {
-	size_t top = 0;
+	size_t top = 0, pa = 0;
 	node** stack[64];
 	stack[0] = dest;
 	for (node *head = source, *next_head = NULL; head != NULL; head = next_head)
@@ -319,44 +319,53 @@ void generate_tree(node** dest, node* source)
 		head->right = NULL;
 		if (head->type == VAL_SYM)
 		{
-			if ((*dest) == NULL)
+			if ((*stack[top]) == NULL)
 			{
-				(*dest) = head;
+				(*stack[top]) = head;
 			}
 			else
 			{
-				(*(rightest_node(dest)))->right = head;
+				(*(rightest_node(stack[top])))->right = head;
 			}
 		}
 		else if (head->type == OPT_SYM)
 		{
 			if (head->opt == LPAR_OPT)
 			{
-				stack[top+1] = rightest_node(stack[top]);
+				if ((*stack[top]) != NULL)
+				{
+					stack[top+1] = &(*(rightest_node(stack[top])))->right;
+				}
+				else
+				{
+					(*stack[top]) = new_node();
+					stack[top+1] = stack[top];
+				}
 				top++;
 			}
 			else if (head->opt == RPAR_OPT)
 			{
 				top--;
+				pa = 1;
 			}
 			else
 			{
-				if ((*dest)->type == VAL_SYM)
+				if ((*stack[top])->type == VAL_SYM)
 				{
-					head->left = (*dest);
-					(*dest) = head;
+					head->left = (*stack[top]);
+					(*stack[top]) = head;
 				}
-				else if ((*dest)->type == OPT_SYM)
+				else if ((*stack[top])->type == OPT_SYM)
 				{
-					if (priority((*dest)->type) < priority(head->opt))
+					if (pa || priority((*stack[top])->type) >= priority(head->opt))
 					{
-						head->left = (*dest)->right;
-						(*dest)->right = head;
+						head->left = (*stack[top]);
+						(*stack[top]) = head;
 					}
 					else
 					{
-						head->left = (*dest);
-						(*dest) = head;
+						head->left = (*stack[top])->right;
+						(*stack[top])->right = head;
 					}
 				}
 				else
@@ -364,6 +373,7 @@ void generate_tree(node** dest, node* source)
 					raise_error("Expression contain unknown symbol.");
 					return;
 				}
+				pa = 0;
 			}
 		}
 		else

@@ -1,9 +1,8 @@
-CC = gcc
-FLAGS = -g -std=gnu99 -O0
+CC := gcc
+FLAGS := -std=gnu99 -O0
+WFLAGS := -g -Wall -Werror
 
-WFLAGS = -o debug -Wall -Werror
-
-FILENAME = main.c
+FILENAME := main.c
 
 build:
 	${CC} ${FILENAME} ${FLAGS} $(WFLAGS)
