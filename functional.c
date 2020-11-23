@@ -1,10 +1,9 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "functional.h"
 
-static optt atoptt(const char* opt)
+optt atoptt(const char* opt)
 {
 	if (!strcmp(opt, "+")) return ADD_OPT;
 	else if (!strcmp(opt, "-")) return SUB_OPT;
@@ -15,7 +14,7 @@ static optt atoptt(const char* opt)
 	else return UNKNOWN_OPT;
 }
 
-static char* opttta(const optt opt)
+char* opttta(const optt opt)
 {
 	if (opt == ADD_OPT) return "+";
 	else if (opt == SUB_OPT) return "-";
@@ -26,22 +25,28 @@ static char* opttta(const optt opt)
 	else return "?";
 }
 
-static node* new_node()
+int opttcmp(const optt opt_1, const optt opt_2)
 {
-	node* n = (node*) malloc(sizeof(node));
-	n->type = UNKNOWN_SYM;
-	n->left = NULL;
-	n->right = NULL;
-	return n;
+	return !!((int) opt_1 >= (int) opt_2);
 }
 
-static void set_val(node* dest, const char* sym)
+node* new_node()
 {
-	dest->val = atoi(sym);
-	dest->type = VAL_SYM;
+	node* ret = (node*) malloc(sizeof(node));
+	ret->type = UNKNOWN_SYM;
+	ret->left = NULL;
+	ret->right = NULL;
+	return ret;
 }
 
-static void set_opt(node* dest, const char* sym)
+node* rightest_node(node* source)
+{
+	if (source == NULL) return source;
+	else if (source->right == NULL) return source;
+	else return rightest_node(source->right);
+}
+
+void set_opt(node* dest, const char* sym)
 {
 	dest->opt = atoptt(sym);
 	if (dest->opt != UNKNOWN_OPT)
@@ -50,74 +55,65 @@ static void set_opt(node* dest, const char* sym)
 	}
 }
 
-static node* rightest_node(node* source)
+void set_val(node* dest, const char* sym)
 {
-	if (source == NULL) return source;
-	else if (source->right == NULL) return source;
-	else return rightest_node(source->right);
+	dest->val = atoi(sym);
+	dest->type = VAL_SYM;
 }
 
 void generate_token(node** dest, const char* source)
 {
-	char atok[128];  // buffer
-	node* ntok = NULL;  // new token node
-	for (size_t tlen, head = 0; head < strlen(source); head += tlen)
+	char temp[128];
+	node* ntok = NULL;
+	for (size_t clen, head = 0; head < strlen(source); head += clen)
 	{
 		// create new token node
-		if ((*dest) == NULL)
+		if (ntok == NULL)
 		{
-			(*dest) = new_node();
-			ntok = (*dest);
+			ntok = new_node();
+			(*dest) = ntok;
 		}
 		else
 		{
-			ntok->next = new_node();
-			ntok->next->prev = ntok;
-			ntok = ntok->next;
+			ntok->right = new_node();
+			ntok = ntok->right;
 		}
 
-		// operand := span(0-9)
-		tlen = strspn(source+head, "0123456789");
-		if (tlen != 0)
+		// numerical node
+		clen = strspn(source+head, "0123456789");
+		if (clen != 0)
 		{
-			strncpy(atok, source+head, tlen);
-			atok[tlen]='\0';
-			ntok
+			strncpy(temp, source+head, clen);
+			temp[clen]='\0';
+			set_val(ntok, temp);
 			continue;
 		}
-		// function name := span(a-zA-Z_0-9)
-		tlen = strspn(source+head, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_012345679");
-		if (tlen != 0)
+		// function name node
+		clen = strspn(source+head, "abcdefghijklmnopqrstuvwxyz_0123456790");
+		if (clen != 0)
 		{
-			strncpy(atok, source+head, tlen);
-			atok[tlen]='\0';
-			set_opt(ntok, atok);
+			strncpy(temp, source+head, clen);
+			temp[clen]='\0';
+			set_opt(ntok, temp);
 			continue;
 		}
-		// operator := <char>
-		tlen = 1;
-		strncpy(atok, source+head, tlen);
-		atok[tlen]='\0';
-		set_opt(ntok, atok);
+		// else... operator node
+		clen = 1;
+		strncpy(temp, source+head, clen);
+		temp[clen]='\0';
+		set_opt(ntok, temp);
 	}
 }
 
 void view_token(node* source)
 {
-	for(node *curr_tok = source; curr_tok != NULL; curr_tok = curr_tok->next)
+	node* curr_tok = source;
+	while (curr_tok != NULL)
 	{
-		if (curr_tok->type == VAL_SYM)
-		{
-			printf("%d, ", curr_tok->val);
-		}
-		else if (curr_tok->type == OPT_SYM)
-		{
-			printf("%s, ", opttta(curr_tok->opt));
-		}
-		else
-		{
-			printf("?, ");
-		}
+		if (curr_tok->type == VAL_SYM) printf("%d, ", curr_tok->val);
+		else if (curr_tok->type == OPT_SYM) printf("%s, ", opttta(curr_tok->opt));
+		else printf("?, ");
+		curr_tok = curr_tok->right;
 	}
 	printf("\n");
 }
@@ -313,7 +309,7 @@ void generate_tree(node** dest, node** source)
 	node *curr_head = (*source), *next_head = NULL;
 	while (curr_head != NULL)
 	{
-		next_head = curr_head->right;
+		if (curr_head != NULL) next_head = curr_head->right;
 		if (curr_head->type == VAL_SYM)
 		{
 			curr_head->left = NULL;
@@ -366,43 +362,5 @@ void generate_tree(node** dest, node** source)
 			}
 		}
 		curr_head = next_head;
-	}
-}
-
-static void private_view_tree_postfix(node* source)
-{
-	if (source->left != NULL)
-	{
-		private_view_tree_postfix(source->left);
-	}
-	if (source->right != NULL)
-	{
-		private_view_tree_postfix(source->right);
-	}
-	// current
-	if (source->type == VAL_SYM)
-	{
-		printf("%d", source->val);
-	}
-	else if (source->type == OPT_SYM)
-	{
-		printf("%s", opttta(source->opt));
-	}
-	else
-	{
-		// UNKNOWN_SYM
-	}
-}
-
-void view_tree_postfix (node* source)
-{
-	if (source == NULL)
-	{
-		printf("Empty expression node.\n");
-	}
-	else
-	{
-		private_view_tree_postfix(source);
-		printf("\n");
 	}
 }
