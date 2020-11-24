@@ -77,12 +77,12 @@ void generate_token(node** dest, const char* source)
 		}
 
 		// numerical node
-		clen = strspn(source+head, "0123456789");
+		clen = strspn(source+head, ".0123456789");
 		if (clen != 0)
 		{
 			strncpy(temp, source+head, clen);
 			temp[clen]='\0';
-			ntok->val = atoi(temp);
+			ntok->val = atof(temp);
 			ntok->type = VAL_SYM;
 			continue;
 		}
@@ -99,7 +99,27 @@ void generate_token(node** dest, const char* source)
 		clen = 1;
 		strncpy(temp, source+head, clen);
 		temp[clen]='\0';
+
 		set_opt(ntok, temp);
+	}
+	for (node** head = dest; (*head) != NULL; head = &(*head)->next)
+	{
+		if ((*head)->next != NULL && (*head)->next->next != NULL && (*head)->next->next != NULL)
+		{
+			node *a = (*head), *b = (*head)->next, *c = (*head)->next->next, *d = (*head)->next->next->next;
+			if (a->type == OPT_SYM && a->opt == LPAR_OPT &&
+				b->type == OPT_SYM && b->opt == SUB_OPT &&
+				c->type == VAL_SYM &&
+				d->type == OPT_SYM && d->opt == RPAR_OPT)
+			{
+				(*head)->type = VAL_SYM;
+				(*head)->val = -1.0*c->val;
+				(*head)->next = d->next;
+				free(b);
+				free(c);
+				free(d);
+			}
+		}
 	}
 }
 
@@ -109,7 +129,16 @@ void view_token(node* source)
 	{
 		if (head->type == VAL_SYM)
 		{
-			printf("%d", head->val);
+			if (head->val < 0) printf("(");
+			if ((int) head->val == (float) head->val)
+			{
+				printf("%.0f", head->val);
+			}
+			else
+			{
+				printf("%.2f", head->val);
+			}
+			if (head->val < 0) printf(")");
 		}
 		else if (head->type == OPT_SYM)
 		{
@@ -151,21 +180,25 @@ void syntax_check(node* source)
 {
 	// reset error flags
 	error_counter = 0;
-
+	if (source == NULL)
+	{
+		raise_error("Empty expression string.");
+		return;
+	}
 	size_t pa_level = 0;
 	node* prev_tok = NULL;
 	node* curr_tok = source;
 	// FOPT check
-	if (curr_tok->type == OPT_SYM && curr_tok->opt != LPAR_OPT)
+	if (curr_tok->type == OPT_SYM && curr_tok->opt != LPAR_OPT && curr_tok->opt != RPAR_OPT)
 	{
-		raise_error("FOPT");
+		raise_error("First character an operator.");
 	}
 	// UMPA check
 	while(curr_tok != NULL)
 	{
 		if (curr_tok->type == UNKNOWN_SYM)
 		{
-			raise_error("UN");
+			raise_error("Illegal character.");
 		}
 		else if (curr_tok->type == OPT_SYM)
 		{
@@ -176,11 +209,11 @@ void syntax_check(node* source)
 				{
 					if (prev_tok->type == VAL_SYM)
 					{
-						raise_error("MISMUL_L");
+						raise_error("Identifier followed by a left parenthesis.");
 					}
 					else if (prev_tok->type == OPT_SYM && prev_tok->opt == RPAR_OPT)
 					{
-						raise_error("MSIMUL");
+						raise_error("Right parenthesis followed by a left parenthesis.");
 					}
 				}
 			}
@@ -195,35 +228,35 @@ void syntax_check(node* source)
 						{
 							if (prev_tok->opt == LPAR_OPT)
 							{
-								raise_error("EMPTY");
+								raise_error("Left parenthesis followed by a right parenthesis.");
 							}
 							else if (prev_tok->opt != RPAR_OPT)
 							{
-								raise_error("LOPT_R");
+								raise_error("Operator followed by a right parenthesis");
 							}
 						}
 					}
 				}
 				else
 				{
-					raise_error("UMPA_R");
+					raise_error("Unmatched right parenthesis.");
 				}
 			}
 			else if (prev_tok != NULL && prev_tok->type == OPT_SYM)
 			{
 				if (prev_tok->opt == LPAR_OPT)
 				{
-					raise_error("FOPT_L");
+					raise_error("Left parenthesis followed by an operator.");
 				}
 				else if (prev_tok->opt != RPAR_OPT)
 				{
-					raise_error("OPTOPT");
+					raise_error("Operator followed by an operator.");
 				}
 			}
 		}
 		else if (prev_tok != NULL && prev_tok->type == OPT_SYM && prev_tok->opt == RPAR_OPT)
 		{
-			raise_error("MISMUL_R");
+			raise_error("Right parenthesis followed by an identifier.");
 		}
 		// update
 		prev_tok = curr_tok;
@@ -231,15 +264,15 @@ void syntax_check(node* source)
 	}
 	if (pa_level != 0)
 	{
-		raise_error("UMPA_L");
+		raise_error("Unmatched left parenthesis.");
 	}
-	if (prev_tok->type == OPT_SYM && prev_tok->opt != RPAR_OPT)
+	if (prev_tok->type == OPT_SYM && prev_tok->opt != RPAR_OPT && prev_tok->opt != LPAR_OPT)
 	{
-		raise_error("LOPT");
+		raise_error("Last character an operator.");
 	}
 }
 
-int simplest_calculate(const optt opt, const int val_1, const int val_2)
+float simplest_calculate(const optt opt, const float val_1, const float val_2)
 {
 	if (opt == ADD_OPT)
 	{
@@ -273,7 +306,7 @@ int simplest_calculate(const optt opt, const int val_1, const int val_2)
 }
 
 
-int calculate(node* source)
+float calculate(node* source)
 {
 	if (source == NULL)
 	{
@@ -288,7 +321,14 @@ int calculate(node* source)
 		}
 		else if (source->type == OPT_SYM)
 		{
-			return simplest_calculate(source->opt, calculate(source->left), calculate(source->right));
+			if (source->opt == LPAR_OPT)
+			{
+				return calculate(source->left);
+			}
+			else
+			{
+				return simplest_calculate(source->opt, calculate(source->left), calculate(source->right));
+			}
 		}
 		else
 		{
@@ -300,15 +340,49 @@ int calculate(node* source)
 
 node** rightest_node(node** source)
 {
-	if (source == NULL) return source;
-	else if ((*source) == NULL) return source;
+	if ((*source) == NULL) return source;
 	else if ((*source)->right == NULL) return source;
 	else return rightest_node(&(*source)->right);
 }
 
+void tree_remove_LPAR_OPT(node** dest)
+{
+	if ((*dest)->type == VAL_SYM)
+	{
+		return;
+	}
+	if ((*dest)->type == OPT_SYM)
+	{
+		if ((*dest)->opt != LPAR_OPT)
+		{
+			tree_remove_LPAR_OPT(&(*dest)->left);
+			tree_remove_LPAR_OPT(&(*dest)->right);
+		}
+		else
+		{
+			node* temp = (*dest)->left;
+			if (temp->type == VAL_SYM)
+			{
+				(*dest)->type = VAL_SYM;
+				(*dest)->val = temp->val;
+				(*dest)->left = NULL;
+				free(temp);
+			}
+			else
+			{
+				(*dest)->type = OPT_SYM;
+				(*dest)->opt = temp->opt;
+				(*dest)->left = temp->left;
+				(*dest)->right = temp->right;
+				free(temp);
+			}
+		}
+	}
+}
+
 void generate_tree(node** dest, node* source)
 {
-	size_t top = 0, pa = 0;
+	size_t top = 0;
 	node** stack[64];
 	stack[0] = dest;
 	for (node *head = source, *next_head = NULL; head != NULL; head = next_head)
@@ -319,34 +393,33 @@ void generate_tree(node** dest, node* source)
 		head->right = NULL;
 		if (head->type == VAL_SYM)
 		{
-			if ((*stack[top]) == NULL)
+			if (*stack[top] == NULL)
 			{
 				(*stack[top]) = head;
 			}
 			else
 			{
-				(*(rightest_node(stack[top])))->right = head;
+				(*rightest_node(stack[top]))->right = head;
 			}
 		}
 		else if (head->type == OPT_SYM)
 		{
 			if (head->opt == LPAR_OPT)
 			{
-				if ((*stack[top]) != NULL)
+				if ((*stack[top]) == NULL)
 				{
-					stack[top+1] = &(*(rightest_node(stack[top])))->right;
+					(*stack[top]) = head;
 				}
 				else
 				{
-					(*stack[top]) = new_node();
-					stack[top+1] = stack[top];
+					(*rightest_node(stack[top]))->right = head;
 				}
+				stack[top+1] = &(*rightest_node(stack[top]))->left;
 				top++;
 			}
 			else if (head->opt == RPAR_OPT)
 			{
 				top--;
-				pa = 1;
 			}
 			else
 			{
@@ -355,25 +428,19 @@ void generate_tree(node** dest, node* source)
 					head->left = (*stack[top]);
 					(*stack[top]) = head;
 				}
-				else if ((*stack[top])->type == OPT_SYM)
+				else
 				{
-					if (pa || priority((*stack[top])->type) >= priority(head->opt))
-					{
-						head->left = (*stack[top]);
-						(*stack[top]) = head;
-					}
-					else
+					if (priority((*stack[top])->opt) < priority(head->opt))
 					{
 						head->left = (*stack[top])->right;
 						(*stack[top])->right = head;
 					}
+					else
+					{
+						head->left = (*stack[top]);
+						(*stack[top]) = head;
+					}
 				}
-				else
-				{
-					raise_error("Expression contain unknown symbol.");
-					return;
-				}
-				pa = 0;
 			}
 		}
 		else
@@ -382,6 +449,7 @@ void generate_tree(node** dest, node* source)
 			return;
 		}
 	}
+	tree_remove_LPAR_OPT(dest);
 }
 
 void delete_tree(node** dest)
@@ -402,15 +470,28 @@ void view_tree_postfix(node* source)
 	view_tree_postfix(source->right);
 	if (source->type == VAL_SYM)
 	{
-		printf("%d", source->val);
+		if (source->val < 0) printf("(");
+		if ((int) source->val == (float) source->val)
+			{
+				printf("%.0f", source->val);
+			}
+			else
+			{
+				printf("%.2f", source->val);
+			}
+		if (source->val < 0) printf(") ");
+		else printf(" ");
 	}
 	else if (source->type == OPT_SYM)
 	{
-		printf("%s", opttta(source->opt));
+		if (source->opt != LPAR_OPT)
+		{
+			printf("%s ", opttta(source->opt));
+		}
 	}
 	else
 	{
-		printf("?");
+		printf("? ");
 	}
 }
 

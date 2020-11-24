@@ -1,51 +1,39 @@
-?
-UN
-(, (, 1, )
-UMPA_L
-(, 1, ), )
-UMPA_R
-(, )
-EMPTY
-+, 1
-FOPT
-(, +, 1, )
-FOPT_L
-1, +
-LOPT
-(, 1, +, )
-LOPT_R
-1, +, +, 1
-OPTOPT
-1, (, 1, )
-MISMUL_L
-(, 1, ), 1
-MISMUL_R
-(, 1, ), (, 1, )
-MSIMUL
-1
-1=1
-1, +, 2
-12+=3
-1, +, 2, +, 3
-12+3+=6
-1, +, 2, *, 3, -, 4, /, 5
-123*+45/-=7
-(, 1, )
-1=1
-(, 1, +, 2, ), *, 3
-12+3*=9
-1, *, (, 2, +, 3, )
-123+*=5
-1, /, 0
-Divide By Zero.
-0, /, 0
-Divide By Zero.
-(, (, (, (, (, (, (, (, (, (, 1, ), ), ), ), ), ), ), ), ), )
-1=1
-1111, +, 1111, -, 1111, *, 1111, /, 1111
-11111111+11111111*1111/-=1111
-?, (, 4, )
-UN
-?, (, 10, ?, 2, )
-UN
-UN
+> The postfix expression: 1 2 + 3 + 4 + 
+= 10
+> The postfix expression: 1 2 + 3 4 * + 
+= 15
+> The postfix expression: 1 2 3 * + 4 + 
+= 11
+> The postfix expression: 1 2 * 3 + 4 + 
+= 9
+> The postfix expression: 1 2 3 * 4 * + 
+= 25
+> The postfix expression: 1 2 * 3 4 * + 
+= 14
+> The postfix expression: 1 2 * 3 * 4 + 
+= 10
+> The postfix expression: 1 2 * 3 * 4 * 
+= 24
+> The postfix expression: 1 
+= 1
+> The postfix expression: 1 
+= 1
+> The postfix expression: 1 
+= 1
+> The postfix expression: 1 2 + 6 1 + 9 * 3 / - 
+= -18
+> The postfix expression: 3 5 + 2 / 1 + 4 - 
+= 1
+> The postfix expression: 28 56 1 - * 7 / 23 - 3 + 
+= 200
+> The postfix expression: (-1) 
+= -1
+> The postfix expression: 1 (-2) + 
+= -1
+> The postfix expression: 4 (-2) / 3 + 
+= 1
+> The postfix expression: 4 2 / 
+= 2
+> The postfix expression: 2 4 / 
+= 0.50
+> 

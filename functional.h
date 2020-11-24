@@ -46,7 +46,7 @@ struct node:
 		   DEFAULT VALUE: UNKNOWN (UNKNOWN_SYM)
 	union:
 		   @opt: enum operator_type
-		   @val: 32-bit integer
+		   @val: 32-bit floating point number
 	next:
 		  @left (previous): a pointer to structure node,
 		  					DEFAULT VALUE: EMPTY (NULL)
@@ -59,7 +59,7 @@ typedef struct node
 	union
 	{
 		optt opt;
-		int val;
+		float val;
 	};
 	union
 	{
@@ -153,7 +153,7 @@ extern void view_tree_postfix (
 	node* source
 );
 
-extern int calculate(node* source);
+extern float calculate(node* source);
 /**************************************************************
 **************************************************************/
 #endif
