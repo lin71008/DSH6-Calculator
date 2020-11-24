@@ -14,5 +14,6 @@ test:
 	diff -B -w --color test_output sample_output
 
 clean:
-	rm $(OBJECT) *.exe
 	rm test_output
+	rm main.exe
+	rm $(OBJECT)

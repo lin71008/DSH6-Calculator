@@ -6,6 +6,7 @@
 > 輸出運算式 postfix 表達式與其計算結果. 不保證輸入運算式合法, 需提供偵錯功能.
 
 ### 錯誤型態(Error Type)
+- Line contains more characters than allowed.
 - Value Error
 	+ Illegal character
 - Syntax Error
