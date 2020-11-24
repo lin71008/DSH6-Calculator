@@ -217,24 +217,24 @@ void syntax_check(node* source)
 				if (pa_level > 0)
 				{
 					pa_level--;
-					if (prev_tok != NULL)
-					{
-						if (prev_tok->type == OPT_SYM)
-						{
-							if (prev_tok->opt == LPAR_OPT)
-							{
-								raise_error("Left parenthesis followed by a right parenthesis");
-							}
-							else if (prev_tok->opt != RPAR_OPT)
-							{
-								raise_error("Operator followed by a right parenthesis");
-							}
-						}
-					}
 				}
 				else
 				{
 					raise_error("Unmatched right parenthesis");
+				}
+				if (prev_tok != NULL)
+				{
+					if (prev_tok->type == OPT_SYM)
+					{
+						if (prev_tok->opt == LPAR_OPT)
+						{
+							raise_error("Left parenthesis followed by a right parenthesis");
+						}
+						else if (prev_tok->opt != RPAR_OPT)
+						{
+							raise_error("Operator followed by a right parenthesis");
+						}
+					}
 				}
 			}
 			else if (prev_tok != NULL && prev_tok->type == OPT_SYM)

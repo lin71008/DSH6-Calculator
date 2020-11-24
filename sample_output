@@ -29,3 +29,16 @@ Thepostfix expression: 28561-*7/23-3+= 200
 
 Thepostfix expression: 13/= 0.33
 Thepostfix expression: 0.100.20+= 0.30
+
+First character an operator
+Operator followed by an operator
+Illegal character
+Unmatched right parenthesis
+Operator followed by a right parenthesis
+Right parenthesis followed by an identifier
+Identifier followed by a left parenthesis
+Left parenthesis followed by a right parenthesis
+Right parenthesis followed by a left parenthesis
+Left parenthesis followed by an operator
+Unmatched left parenthesis
+Last character an operator
