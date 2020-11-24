@@ -3,7 +3,7 @@
 ## 目的(Goal)
 
 > 以 C / C++ 語言實做一簡單計算機程式, 輸入 infix 表示式的數學運算式,
-> 輸出運算式的計算結果. 不保證輸入運算式合法, 需提供偵錯功能.
+> 輸出運算式 postfix 表達式與其計算結果. 不保證輸入運算式合法, 需提供偵錯功能.
 
 ### 錯誤型態(Error Type)
 - Value Error
@@ -28,58 +28,96 @@
 	+ Divide By Zero
 
 ### 範例(Example)
-- Non-Error
-```bash
-cal "3+2-1"
->>> 4
-cal "3-2+1"
->>> 2
-cal "1+2*3"
->>> 7
-cal "1*2+3	"
->>> 5
-cal "(1+2)*3"
->>> 9
-cal "1*(2+3)"
->>> 5
-```
-- VE
-```bash
-cal "A!"
->>> UN
-cal "0/0"
->>>
-```
-- SE
-```bash
-cal "()"
->>> "EMPTY"
-cal ""
->>>
-```
+參考 [sample_input](sample_input), [sample_output](sample_output)
 
 ---
 
-### 符號定義(Symbol Definition)
+## 分析(Anylize)
+### 定義(Definition)
 - 運算式(expression): `<exp> := <sym> | <sym><exp>`
 - 符號(Symbol): `<sym> := <opt> | <val>`
-- 運算子(operator): `<opt> := [+-*/]`
-	+ 優先度(priority): `{'+': 0, '-': 1, '*': 2, '/': 3}}`
+- 運算子(operator): `<opt> := [+-*/()]`
+	+ 優先度(priority):
+		* `+`, `-`: 1 (lowest)
+		* `*`, `/`: 2
+		* `(`, `)`: 3 (highest)
 - 運算元(operand):
 	+ 純量(scale): `<val> := [-]?[0-9]+`
 		* 十進制(decimal)
 
----
+### 處理步驟(Process)
+> 首先, 考慮如何將輸入的字串拆分成一個個僅由運算子或運算元構成的小段
+> 參考運算式的定義, 可知命題同等於:
+>> 找到一個方法, 將運算式拆分為一個符號跟一個後綴的運算式
+> 以此為基礎, 可以構造第一個函數使得:
+>> "1+(-1)" -> \["1", "+", "(", "-", 1", ")"\]
 
-## System
-### System Design
-- `<simple-exp> = <node>[]`
-- `<node> := <val>|<opt>`
+```c
+// functional.h
+void generate_token (
+	node** destination,
+	const char* source
+);
+```
 
-- Define `<simple-exp> := <val>|<simple-exp><opt><simple-exp>`
-- `declare function cal(<simple-exp>) return <val>`
+> 接著, 考慮負數的表達式, 我們要將產生的 token-list 做一些預處理,
+> 讓 \["(", "-", 1", ")"\] 變為 \["-1"\],
+> 以此為目的, 構造出一個函數
 
+```c
+// functional.c
+static void tree_remove_LPAR_OPT(
+	node** destination
+);
+```
+> 並將該函數加入前一函數尾部
 
+> 接下來, 由於**不保證輸入運算式合法**, 構建一個語法檢查的函數,
+> 以偵測給定錯誤型態列表中的錯誤, 並發出相關資訊.
+> 為方便查找是否有錯誤發生, 同時配置的一個錯誤計數器與其相關函數.
+
+```c
+// functional.h
+int error_counter;
+void syntax_check (
+	node* source
+);
+
+// functional.c
+static void raise_error(
+	const char* error_message
+);  // error_counter++
+```
+
+> 如果語法檢查通過, 接下來考慮將生成的 token-list 轉為樹狀結構 (tree),
+
+```c
+// functional.h
+void generate_tree(
+	node** destination,
+	node* source
+);
+```
+
+> 到此, 剩下功能所需的基本功能都已完成.
+
+> 考慮所需的, 輸出 postfix 表達式之功能,
+> 其即等同於輸出所構建的樹的 postfix
+
+```c
+// functional.h
+void view_tree_postfix(
+	node* source
+);
+// functional.c
+void view_tree_postfix(node* source)
+{
+	if (source == NULL) return;
+	view_tree_postfix(source->left);
+	view_tree_postfix(source->right);
+	// PRINT (*source)
+}
+```
 
 ## License
 Copyright (C) 2020 Hung-Hsiang, Lin
