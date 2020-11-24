@@ -19,16 +19,23 @@ Right parenthesis followed by a left parenthesis
 
 Divide By Zero
 
-The postfix expression: 12+61+9*3/-= -18
-The postfix expression: 35+2/1+4-=1
+The postfix expression: 12+61+9*3/-
+=-18
+The postfix expression: 35+2/1+4-
+=1
 
-The postfix expression: 1(-2)+=-1
-The postfix expression: 4(-2)/3+=1
+The postfix expression: 1(-2)+
+=-1
+The postfix expression: 4(-2)/3+
+=1
 
-Thepostfix expression: 28561-*7/23-3+= 200
+Thepostfix expression: 28561-*7/23-3+
+=200
 
-Thepostfix expression: 13/= 0.33
-Thepostfix expression: 0.100.20+= 0.30
+Thepostfix expression: 13/
+=0.33
+Thepostfix expression: 0.100.20+
+=0.30
 
 First character an operator
 Operator followed by an operator

@@ -32,12 +32,20 @@ int continue_q()
 
 int main(int argc, char const *argv[])
 {
-	char exp_str[128];
+	char exp_str[20+1];
 	node* exp_token = NULL;
 	node* exp_tree = NULL;
-	float result = 0;
-	while (scanf("%s", exp_str) != EOF)
+	float result;
+	while (scanf("%20s", exp_str) != EOF)
 	{
+		char c = getchar();
+		if (c != '\0' && c != '\n' && c != '\t' && c != ' ')
+		{
+			printf("%s\n", "Error -line  contains  more characters than allowed.");
+			exp_token = NULL;
+			exp_tree = NULL;
+			continue;
+		}
 		generate_token(&exp_token, exp_str);
 		// view_token(exp_token);
 		syntax_check(exp_token);
@@ -59,11 +67,11 @@ int main(int argc, char const *argv[])
 			view_tree_postfix(exp_tree);
 			if ((int) result == (float) result)
 			{
-				printf("= %.0f\n", result);
+				printf("\n=%.0f\n", result);
 			}
 			else
 			{
-				printf("= %.2f\n", result);
+				printf("\n=%.2f\n", result);
 			}
 		delete_tree(&exp_tree);
 		if (continue_q() == 1) break;
