@@ -32,6 +32,37 @@
 
 ---
 
+## 如何使用... (How to ...)
+### 建置
+```shell
+make all
+```
+
+### 測試
+```shell
+make test
+```
+
+### 刪除
+```shell
+make clean
+```
+
+## 輸入/輸出介面(Interface)
+載入後無提示, 輸入運算式後會於下行輸出計算結果,
+如輸入有誤, 則輸出錯誤資訊(可能不只一條),
+每筆運算結束後會詢問是否繼續,
+敲擊 `ESC`, `n`, `N` 鍵離開程序
+
+```shell
+$ ./main
+1+1
+The postfix expression: 11+= 2
+Continue? [Y/n]
+```
+
+---
+
 ## 分析(Anylize)
 ### 定義(Definition)
 - 運算式(expression): `<exp> := <sym> | <sym><exp>`
@@ -122,9 +153,7 @@ static float simplest_calculate(
 float calculate(node* source)
 {
 	if (source->type == VALUE) return source->value;
-	else return simplest_calculate(source->operator,
-								   calculate(source->left),
-								   calculate(source->right),);
+	else return simplest_calculate(source->operator, calculate(source->left), calculate(source->right),);
 }
 ```
 
