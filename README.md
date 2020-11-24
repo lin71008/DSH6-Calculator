@@ -6,29 +6,26 @@
 > 輸出運算式的計算結果. 不保證輸入運算式合法, 需提供偵錯功能.
 
 ### 錯誤型態(Error Type)
-- Value Error (VE)
-	+ Illegal character (UN)
-	+ ~~Illegal operand (UN)~~
-- Runtime Error (RE)
-	+ Divide By Zero (DZ)
-	+ Integer Underflow (UF)
-	+ Integer Overflow (OF)
-- Syntax Error (SE)
-	+ Unmatched Parenthesis (UMPA)
-		- Unmatched left parenthesis (UMPA_L)
-		- Unmatched right parenthesis (UMPA_R)
-	+ Empty Expression (EMPTY)
+- Value Error
+	+ Illegal character
+- Syntax Error
+	+ Unmatched Parenthesis
+		- Unmatched left parenthesis
+		- Unmatched right parenthesis
+	+ Empty Expression
 		* Left parenthesis followed by a right parenthesis (EMPTY)
-	+ First character an operator (FOPT)
-		* Left parenthesis followed by an operator (FOPT_L)
-			- exception: negative value
-	+ Last character an operator (LOPT)
-		* Operator followed by a right parenthesis (LOPT_R)
-	+ Operator followed by an operator (OPTOPT)
-- Nonsupport Feature (MISMUL)
-	+ Identifier followed by a left parenthesis (MISMUL_L)
-	+ Right parenthesis followed by an identifier (MISMUL_R)
-	+ Right parenthesis followed by a left parenthesis (MISMUL)
+	+ First character an operator
+		* Left parenthesis followed by an operator
+			- except: negative value
+	+ Last character an operator
+		* Operator followed by a right parenthesis
+	+ Operator followed by an operator
+- Nonsupport Feature
+	+ Identifier followed by a left parenthesis
+	+ Right parenthesis followed by an identifier
+	+ Right parenthesis followed by a left parenthesis
+- Runtime Error
+	+ Divide By Zero
 
 ### 範例(Example)
 - Non-Error

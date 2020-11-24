@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -182,7 +183,7 @@ void syntax_check(node* source)
 	error_counter = 0;
 	if (source == NULL)
 	{
-		raise_error("Empty expression string.");
+		raise_error("Empty expression string");
 		return;
 	}
 	size_t pa_level = 0;
@@ -191,14 +192,14 @@ void syntax_check(node* source)
 	// FOPT check
 	if (curr_tok->type == OPT_SYM && curr_tok->opt != LPAR_OPT && curr_tok->opt != RPAR_OPT)
 	{
-		raise_error("First character an operator.");
+		raise_error("First character an operator");
 	}
 	// UMPA check
 	while(curr_tok != NULL)
 	{
 		if (curr_tok->type == UNKNOWN_SYM)
 		{
-			raise_error("Illegal character.");
+			raise_error("Illegal character");
 		}
 		else if (curr_tok->type == OPT_SYM)
 		{
@@ -209,11 +210,11 @@ void syntax_check(node* source)
 				{
 					if (prev_tok->type == VAL_SYM)
 					{
-						raise_error("Identifier followed by a left parenthesis.");
+						raise_error("Identifier followed by a left parenthesis");
 					}
 					else if (prev_tok->type == OPT_SYM && prev_tok->opt == RPAR_OPT)
 					{
-						raise_error("Right parenthesis followed by a left parenthesis.");
+						raise_error("Right parenthesis followed by a left parenthesis");
 					}
 				}
 			}
@@ -228,7 +229,7 @@ void syntax_check(node* source)
 						{
 							if (prev_tok->opt == LPAR_OPT)
 							{
-								raise_error("Left parenthesis followed by a right parenthesis.");
+								raise_error("Left parenthesis followed by a right parenthesis");
 							}
 							else if (prev_tok->opt != RPAR_OPT)
 							{
@@ -239,24 +240,24 @@ void syntax_check(node* source)
 				}
 				else
 				{
-					raise_error("Unmatched right parenthesis.");
+					raise_error("Unmatched right parenthesis");
 				}
 			}
 			else if (prev_tok != NULL && prev_tok->type == OPT_SYM)
 			{
 				if (prev_tok->opt == LPAR_OPT)
 				{
-					raise_error("Left parenthesis followed by an operator.");
+					raise_error("Left parenthesis followed by an operator");
 				}
 				else if (prev_tok->opt != RPAR_OPT)
 				{
-					raise_error("Operator followed by an operator.");
+					raise_error("Operator followed by an operator");
 				}
 			}
 		}
 		else if (prev_tok != NULL && prev_tok->type == OPT_SYM && prev_tok->opt == RPAR_OPT)
 		{
-			raise_error("Right parenthesis followed by an identifier.");
+			raise_error("Right parenthesis followed by an identifier");
 		}
 		// update
 		prev_tok = curr_tok;
@@ -264,11 +265,11 @@ void syntax_check(node* source)
 	}
 	if (pa_level != 0)
 	{
-		raise_error("Unmatched left parenthesis.");
+		raise_error("Unmatched left parenthesis");
 	}
 	if (prev_tok->type == OPT_SYM && prev_tok->opt != RPAR_OPT && prev_tok->opt != LPAR_OPT)
 	{
-		raise_error("Last character an operator.");
+		raise_error("Last character an operator");
 	}
 }
 
@@ -290,7 +291,7 @@ float simplest_calculate(const optt opt, const float val_1, const float val_2)
 	{
 		if (val_2 == 0)
 		{
-			raise_error("Divide By Zero.");
+			raise_error("Divide By Zero");
 			return 0;
 		}
 		else
@@ -300,7 +301,7 @@ float simplest_calculate(const optt opt, const float val_1, const float val_2)
 	}
 	else
 	{
-		raise_error("Undefined operator method.");
+		raise_error("Undefined operator method");
 		return 0;
 	}
 }
@@ -310,7 +311,7 @@ float calculate(node* source)
 {
 	if (source == NULL)
 	{
-		raise_error("Empty expression node.");
+		raise_error("Empty expression node");
 		return 0;
 	}
 	else
@@ -332,7 +333,7 @@ float calculate(node* source)
 		}
 		else
 		{
-			raise_error("Expression contain unknown symbol.");
+			raise_error("Expression contain unknown symbol");
 			return 0;
 		}
 	}
@@ -445,7 +446,7 @@ void generate_tree(node** dest, node* source)
 		}
 		else
 		{
-			raise_error("Expression contain unknown symbol.");
+			raise_error("Expression contain unknown symbol");
 			return;
 		}
 	}
@@ -479,19 +480,18 @@ void view_tree_postfix(node* source)
 			{
 				printf("%.2f", source->val);
 			}
-		if (source->val < 0) printf(") ");
-		else printf(" ");
+		if (source->val < 0) printf(")");
 	}
 	else if (source->type == OPT_SYM)
 	{
 		if (source->opt != LPAR_OPT)
 		{
-			printf("%s ", opttta(source->opt));
+			printf("%s", opttta(source->opt));
 		}
 	}
 	else
 	{
-		printf("? ");
+		printf("?");
 	}
 }
 

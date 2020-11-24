@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "functional.c"
-
+// Detect EOF, ESC, STDIO.redirect
 #include <conio.h>
 #include <unistd.h>
+// expression analyze library
+#include "functional.h"
 
 int continue_q()
 {
@@ -32,16 +32,12 @@ int continue_q()
 
 int main(int argc, char const *argv[])
 {
-	char c, exp_str[128];
+	char exp_str[128];
 	node* exp_token = NULL;
 	node* exp_tree = NULL;
 	float result = 0;
-	do
+	while (scanf("%s", exp_str) != EOF)
 	{
-		printf("> ");
-		exp_str[0] = '\0';
-		scanf("%s", exp_str);
-		if (strlen(exp_str) == 0) break;  // EOF
 		generate_token(&exp_token, exp_str);
 		// view_token(exp_token);
 		syntax_check(exp_token);
@@ -61,7 +57,6 @@ int main(int argc, char const *argv[])
 		}
 			printf("The postfix expression: ");
 			view_tree_postfix(exp_tree);
-			printf("\n");
 			if ((int) result == (float) result)
 			{
 				printf("= %.0f\n", result);
@@ -72,6 +67,6 @@ int main(int argc, char const *argv[])
 			}
 		delete_tree(&exp_tree);
 		if (continue_q() == 1) break;
-	} while (1);
+	}
 	return 0;
 }
