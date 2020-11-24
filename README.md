@@ -42,7 +42,7 @@
 		* `*`, `/`: 2
 		* `(`, `)`: 3 (highest)
 - 運算元(operand):
-	+ 純量(scale): `<val> := [-]?[0-9]+`
+	+ 純量(scale): `<val> := [-]?[.0-9]+`
 		* 十進制(decimal)
 
 ### 處理步驟(Process)
@@ -98,26 +98,50 @@ void generate_tree(
 	node* source
 );
 ```
-
 > 到此, 剩下功能所需的基本功能都已完成.
+
+> 現在考慮所需的, 輸出運算式結果的功能:
+
+> 考慮最簡單的運算式: \("1"\),
+> 訪問根節點即可得到答案.
+> 再來, 考慮運算式: \("+", \("1", "1"\)\),
+> 很顯然的由於根節點是符號,
+> 我們需要訪問其左右子樹查看其數值後, 才能再做計算獲得答案
+
+> 由此類推可以構造出一遞迴函數,
+> 當運算式為最簡單型態時 (純數值), 返回其結果.
+> 當運算式非最簡單型態時, 求取其左右子樹的數值, 再做計算獲得結果.
+
+```c
+// functional.c
+static float simplest_calculate(
+	enum operator_type operator,
+	float source_1,
+	float source_2
+);
+float calculate(node* source)
+{
+	if (source->type == VALUE) return source->value;
+	else return simplest_calculate(source->operator,
+								   calculate(source->left),
+								   calculate(source->right),);
+}
+```
 
 > 考慮所需的, 輸出 postfix 表達式之功能,
 > 其即等同於輸出所構建的樹的 postfix
 
 ```c
-// functional.h
-void view_tree_postfix(
-	node* source
-);
 // functional.c
 void view_tree_postfix(node* source)
 {
 	if (source == NULL) return;
 	view_tree_postfix(source->left);
 	view_tree_postfix(source->right);
-	// PRINT (*source)
+	print(source->data);
 }
 ```
+
 
 ## License
 Copyright (C) 2020 Hung-Hsiang, Lin
