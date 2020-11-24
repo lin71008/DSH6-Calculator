@@ -153,7 +153,7 @@ extern void view_tree_postfix (
 	node* source
 );
 
-extern float calculate(node* source);
 /**************************************************************
 **************************************************************/
+extern float calculate(node* source);
 #endif

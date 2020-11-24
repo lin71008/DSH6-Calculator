@@ -4,7 +4,7 @@
 
 #include "functional.h"
 
-optt atoptt(const char* opt)
+static optt atoptt(const char* opt)
 {
 	if (!strcmp(opt, "+")) return ADD_OPT;
 	else if (!strcmp(opt, "-")) return SUB_OPT;
@@ -15,7 +15,7 @@ optt atoptt(const char* opt)
 	else return UNKNOWN_OPT;
 }
 
-char* opttta(const optt opt)
+static char* opttta(const optt opt)
 {
 	if (opt == ADD_OPT) return "+";
 	else if (opt == SUB_OPT) return "-";
@@ -25,7 +25,7 @@ char* opttta(const optt opt)
 	else if (opt == RPAR_OPT) return ")";
 	else return "?";
 }
-int priority(optt opt)
+static int priority(optt opt)
 {
 	if (opt == ADD_OPT) return 1;
 	else if (opt == SUB_OPT) return 1;
@@ -35,7 +35,7 @@ int priority(optt opt)
 	else if (opt == RPAR_OPT) return 3;
 	else return 0;
 }
-node* new_node()
+static node* new_node()
 {
 	node* ret = (node*) malloc(sizeof(node));
 	ret->type = UNKNOWN_SYM;
@@ -44,19 +44,13 @@ node* new_node()
 	return ret;
 }
 
-void set_opt(node* dest, const char* sym)
+static void set_opt(node* dest, const char* sym)
 {
 	dest->opt = atoptt(sym);
 	if (dest->opt != UNKNOWN_OPT)
 	{
 		dest->type = OPT_SYM;
 	}
-}
-
-void set_val(node* dest, const char* sym)
-{
-	dest->val = atoi(sym);
-	dest->type = VAL_SYM;
 }
 
 void generate_token(node** dest, const char* source)
@@ -171,7 +165,7 @@ void delete_token(node** dest)
 	}
 }
 
-void raise_error(const char* err_msg)
+static void raise_error(const char* err_msg)
 {
 	printf("%s\n", err_msg);
 	error_counter++;
@@ -273,7 +267,7 @@ void syntax_check(node* source)
 	}
 }
 
-float simplest_calculate(const optt opt, const float val_1, const float val_2)
+static float simplest_calculate(const optt opt, const float val_1, const float val_2)
 {
 	if (opt == ADD_OPT)
 	{
@@ -339,14 +333,14 @@ float calculate(node* source)
 	}
 }
 
-node** rightest_node(node** source)
+static node** rightest_node(node** source)
 {
 	if ((*source) == NULL) return source;
 	else if ((*source)->right == NULL) return source;
 	else return rightest_node(&(*source)->right);
 }
 
-void tree_remove_LPAR_OPT(node** dest)
+static void tree_remove_LPAR_OPT(node** dest)
 {
 	if ((*dest)->type == VAL_SYM)
 	{
